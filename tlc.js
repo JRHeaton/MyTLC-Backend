@@ -1,7 +1,7 @@
 var cheerio = require('cheerio');
 var request = require('request');
-var _ = require('underscore');
 var crypto = require('crypto');
+var _ = require('underscore');
 
 var dept_map = {
 	'61405' : "Front of Precinct",
