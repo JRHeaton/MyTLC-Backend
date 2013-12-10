@@ -30,4 +30,10 @@ api.get('/schedule', function (req, res) {
 	tlc.get_schedule(session_id, res);
 });
 
+api.get('/flush', function (req, res) {
+	tlc.flush();
+	res.status(200);
+	res.end();
+});
+
 api.listen(2220);

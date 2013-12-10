@@ -44,8 +44,21 @@ function tlc_request(method, path, session_id, params, cb) {
 	request(opts, cb);
 }
 
+function end_json(status, res, obj) {
+	var ret = JSON.stringify(obj);
+	res.writeHead(status, {
+		'Content-Length' : ret.length,
+		'Content-Type' : 'application/json'
+	});
+	res.end(ret);
+}
+
 var tlc_post = function(path, params, session_id, cb) {
 	request({method: 'POST', headers: { 'Cookie' : 'JSESSIONID=' + session_id }, form: params, rejectUnauthorized: false, uri: 'https://mytlc.bestbuy.com' + path }, cb);
+}
+
+exports.flush = function() {
+	active_session_ids = {};
 }
 
 function shifts_from_str_day(str, day) {
@@ -77,13 +90,11 @@ function shifts_from_str_day(str, day) {
 exports.login = function(employee_id, password, res) {
 	if(active_session_ids[employee_id]) {
 		if(active_session_ids[employee_id].password == password) {
-			res.status(200);
-			res.end(JSON.stringify(_.omit(active_session_ids[employee_id], 'password')));
+			end_json(200, res, _.omit(active_session_ids[employee_id], 'password'));
 		} else {
-			res.status(401);
-			res.end(JSON.stringify({
+			end_json(401, res, {
 				error: 'Invalid password'
-			}));
+			});
 		}
 
 		return;
@@ -101,13 +112,11 @@ exports.login = function(employee_id, password, res) {
 			var wbat = $('[name=wbat]').val();
 
 			if(!match) {
-				res.status(417);
-				res.end(JSON.stringify({ 'error' : 'Could not parse interal session identifier' }));
+				end_json(417, res, { 'error' : 'Could not parse interal session identifier' });
 				return;
 			}
 			if(!url_login_token || !wbat) {
-				res.status(417);
-				res.end(JSON.stringify({ 'error' : 'Could not parse TLC login parameters' }));
+				end_json(417, res, { 'error' : 'Could not parse TLC login parameters' });
 				return;
 			}
 
@@ -136,21 +145,18 @@ exports.login = function(employee_id, password, res) {
 							var m = parseInt(match);
 
 							if(m == 32) {
-								res.status(401);
-								res.end(JSON.stringify({
+								end_json(401, res, {
 									error: 'Invalid username'
-								}));
+								});
 								return;
 							} else if(m == 49) {
-								res.status(401);
-								res.end(JSON.stringify({
+								end_json(401, res, {
 									error: 'Invalid password'
-								}));
+								});
 							}
 						}
 
-						res.status(417);
-						res.end(JSON.stringify({error : 'Could not log in to TLC' }));;
+						end_json(417, res, {error : 'Could not log in to TLC' });
 
 						return;
 					}
@@ -166,8 +172,7 @@ exports.login = function(employee_id, password, res) {
 						'session_id': sid
 					};
 
-					res.status(200);
-					res.end(JSON.stringify(active_session_ids[employee_id]));
+					end_json(200, res, active_session_ids[employee_id]);
 
 					setTimeout(function () {
 						delete active_session_ids[employee_id];
@@ -175,13 +180,11 @@ exports.login = function(employee_id, password, res) {
 
 					active_session_ids[employee_id].password = password;
 				} else {
-					res.status(417);
-					res.end(JSON.stringify({ 'error' : 'Could not contact TLC' }));
+					end_json(417, res, { 'error' : 'Could not contact TLC' });
 				}
 			});
 		} else {
-			res.status(417);
-			res.end(JSON.stringify({ 'error' : 'Could not contact TLC' }));
+			end_json(417, res, { 'error' : 'Could not contact TLC' });
 		}
 	});
 }
@@ -196,17 +199,15 @@ exports.get_schedule = function (session_id, res) {
 				if(body.indexOf('top.location = "/etm/login.jsp"') > 0) {
 					delete active_session_ids[employee_id];
 
-					res.status(400);
-					res.end(JSON.stringify({
+					end_json(400, res, {
 						error: 'Session expired'
-					}));
+					});
 					return;
 				}
 
-				res.status(400);
-				res.end(JSON.stringify({
+				end_json(400, res, {
 					error: 'Problem fetching schedule'
-				}));
+				});
 				return;
 			}
 
@@ -222,8 +223,7 @@ exports.get_schedule = function (session_id, res) {
 				res_dict[day_] = shifts;
 			});
 
-			res.status(200);
-			res.end(JSON.stringify(res_dict));
+			end_json(200, res, res_dict);
 		}
 	});
 }
