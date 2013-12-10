@@ -1,6 +1,7 @@
 var cheerio = require('cheerio');
 var request = require('request');
 var _ = require('underscore');
+var crypto = require('crypto');
 
 var dept_map = {
 	'61405' : "Front of Precinct",
@@ -89,7 +90,7 @@ function shifts_from_str_day(str, day) {
 
 exports.login = function(employee_id, password, res) {
 	if(active_session_ids[employee_id]) {
-		if(active_session_ids[employee_id].password == password) {
+		if(active_session_ids[employee_id].password == crypto.createHash('md5').update(password).digest('hex')) {
 			end_json(200, res, _.omit(active_session_ids[employee_id], 'password'));
 		} else {
 			end_json(401, res, {
@@ -178,7 +179,8 @@ exports.login = function(employee_id, password, res) {
 						delete active_session_ids[employee_id];
 					}, 1000 * 60 * 20);
 
-					active_session_ids[employee_id].password = password;
+					var hash = crypto.createHash('md5').update(password).digest('hex');
+					active_session_ids[employee_id].password = hash;
 				} else {
 					end_json(417, res, { 'error' : 'Could not contact TLC' });
 				}
