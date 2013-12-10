@@ -28,6 +28,8 @@ var dept_map = {
     '61540' : "Connectivity Leaders"
 };	
 
+var active_session_ids = {};
+
 function tlc_request(method, path, session_id, params, cb) {
 	var opts = {
 		rejectUnauthorized: false, 
@@ -73,6 +75,13 @@ function shifts_from_str_day(str, day) {
 }
 
 exports.login = function(employee_id, password, res) {
+	if(active_session_ids[employee_id]) {
+		res.status(200);
+		res.end(JSON.stringify(active_session_ids[employee_id]));
+
+		return;
+	}
+
 	tlc_request('GET', '/etm', null, null, function (error, response, body) {
 		if(!error && response.statusCode == 200) {
 			var cookies = response.headers['set-cookie'];
@@ -143,11 +152,16 @@ exports.login = function(employee_id, password, res) {
 
 					var full = first + ' ' + last;
 
-					res.status(200);
-					res.end(JSON.stringify({
+					active_session_ids[employee_id] = {
 						name: full,
 						'session_id': sid
-					}));
+					};
+					setTimeout(function () {
+						delete active_session_ids[employee_id];
+					}, 1000 * 60 * 20);
+
+					res.status(200);
+					res.end(JSON.stringify(active_session_ids[employee_id]));
 				} else {
 					res.status(417);
 					res.end(JSON.stringify({ 'error' : 'Could not contact TLC' }));
@@ -168,6 +182,8 @@ exports.get_schedule = function (session_id, res) {
 
 			if(!valid.length) {
 				if(body.indexOf('top.location = "/etm/login.jsp"') > 0) {
+					delete active_session_ids[employee_id];
+
 					res.status(400);
 					res.end(JSON.stringify({
 						error: 'Session expired'
