@@ -78,7 +78,7 @@ exports.login = function(employee_id, password, res) {
 	if(active_session_ids[employee_id]) {
 		if(active_session_ids[employee_id].password == password) {
 			res.status(200);
-			res.end(JSON.stringify(active_session_ids[employee_id]));
+			res.end(JSON.stringify(_.omit(active_session_ids[employee_id], 'password')));
 		} else {
 			res.status(401);
 			res.end(JSON.stringify({
@@ -128,7 +128,7 @@ exports.login = function(employee_id, password, res) {
 					var $ = cheerio.load(body);
 
 					var user = $('.loggedInUser').text();
-					if(!user) {
+					if(!user.length) {
 						var ldap_str = $('font[color=red]').text();
 						var match = /\[LDAP: error code (\d+)/.exec(ldap_str)[1];
 
@@ -151,6 +151,8 @@ exports.login = function(employee_id, password, res) {
 
 						res.status(417);
 						res.end(JSON.stringify({error : 'Could not log in to TLC' }));;
+
+						return;
 					}
 
 					var result = /(\w+),\s+(\w+)/.exec(user);
@@ -161,17 +163,17 @@ exports.login = function(employee_id, password, res) {
 
 					active_session_ids[employee_id] = {
 						name: full,
-						'session_id': sid,
-						password: password
+						'session_id': sid
 					};
 
-					console.log(active_session_ids[employee_id]);
+					res.status(200);
+					res.end(JSON.stringify(active_session_ids[employee_id]));
+
 					setTimeout(function () {
 						delete active_session_ids[employee_id];
 					}, 1000 * 60 * 20);
 
-					res.status(200);
-					res.end(JSON.stringify(active_session_ids[employee_id]));
+					active_session_ids[employee_id].password = password;
 				} else {
 					res.status(417);
 					res.end(JSON.stringify({ 'error' : 'Could not contact TLC' }));
