@@ -76,8 +76,15 @@ function shifts_from_str_day(str, day) {
 
 exports.login = function(employee_id, password, res) {
 	if(active_session_ids[employee_id]) {
-		res.status(200);
-		res.end(JSON.stringify(active_session_ids[employee_id]));
+		if(active_session_ids[employee_id].password == password) {
+			res.status(200);
+			res.end(JSON.stringify(active_session_ids[employee_id]));
+		} else {
+			res.status(401);
+			res.end(JSON.stringify({
+				error: 'Invalid password'
+			}));
+		}
 
 		return;
 	}
@@ -154,8 +161,11 @@ exports.login = function(employee_id, password, res) {
 
 					active_session_ids[employee_id] = {
 						name: full,
-						'session_id': sid
+						'session_id': sid,
+						password: password
 					};
+
+					console.log(active_session_ids[employee_id]);
 					setTimeout(function () {
 						delete active_session_ids[employee_id];
 					}, 1000 * 60 * 20);
