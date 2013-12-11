@@ -213,7 +213,7 @@ exports.get_schedule = function (session_id, res) {
 				return;
 			}
 
-			var res_dict = {};
+			var res_shifts = [];
 
 			$('.calendarCellRegularFuture[valign]').each(function (index) {
 				var day_ = parseInt($(this).find('.calendarDateNormal').text());
@@ -222,10 +222,10 @@ exports.get_schedule = function (session_id, res) {
 				body = body.trim();
 
 				var shifts = shifts_from_str_day(body, day_);
-				res_dict[day_] = shifts;
+				_.each(shifts, function(_s) { res_shifts.push(_s) });
 			});
 
-			end_json(200, res, res_dict);
+			end_json(200, res, res_shifts);
 		}
 	});
 }

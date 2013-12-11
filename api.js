@@ -36,4 +36,9 @@ api.get('/flush', function (req, res) {
 	res.end();
 });
 
+api.get('/iOS-Version', function (req, res) {
+	res.status(200);
+	res.end(JSON.stringify({ 'major' : 0, 'minor' : 1 }));
+});
+
 api.listen(2220);
