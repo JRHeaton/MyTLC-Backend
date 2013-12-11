@@ -213,8 +213,9 @@ exports.get_schedule = function (session_id, res) {
 				return;
 			}
 
-			var res_shifts = [];
+			var resret = {};
 
+			var future = [], past = [], current = [];
 			$('.calendarCellRegularFuture[valign]').each(function (index) {
 				var day_ = parseInt($(this).find('.calendarDateNormal').text());
 				var body = $(this).find('.calendarCellRegularFuture.etmNoBorder').text();
@@ -222,10 +223,37 @@ exports.get_schedule = function (session_id, res) {
 				body = body.trim();
 
 				var shifts = shifts_from_str_day(body, day_);
-				_.each(shifts, function(_s) { res_shifts.push(_s) });
+				_.each(shifts, function(_s) { 
+					future.push(_s) ;
+				});
 			});
 
-			end_json(200, res, res_shifts);
+			$('.calendarCellRegularCurrent[valign]').each(function (index) {
+				var day_ = parseInt($(this).find('.calendarDateCurrent').text());
+				var body = $(this).find('.calendarCellRegularCurrent.etmNoBorder').text();
+
+				body = body.trim();
+
+				var shifts = shifts_from_str_day(body, day_);
+				_.each(shifts, function(_s) { current.push(_s) });
+
+			});
+
+			$('.calendarCellRegularPast[valign]').each(function (index) {
+				var day_ = parseInt($(this).find('.calendarDateNormal').text());
+				var body = $(this).find('.calendarCellRegularPast.etmNoBorder').text();
+
+				body = body.trim();
+
+				var shifts = shifts_from_str_day(body, day_);
+				_.each(shifts, function(_s) { past.push(_s) });
+			});
+
+			resret.current = current;
+			resret.past = past;
+			resret.future = future;
+
+			end_json(200, res, resret);
 		}
 	});
 }
