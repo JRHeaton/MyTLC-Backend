@@ -11,7 +11,7 @@ api.post('/login', function (req, res) {
 	var password = req.body.password;
 
 	if(employee_id == undefined || password == undefined) {
-		res.status(400);
+		res.writeHead(400, { 'Access-Control-Allow-Origin' : '*' });
 		res.end(JSON.stringify({ 'error' : 'Must provide employee_id and password parameters'}));
 
 		return;
@@ -37,7 +37,7 @@ api.get('/flush', function (req, res) {
 });
 
 api.get('/iOS-Version', function (req, res) {
-	res.status(200);
+	res.writeHead(200, { 'Access-Control-Allow-Origin' : '*' });
 	res.end(JSON.stringify({ 'major' : 0, 'minor' : 1 }));
 });
 

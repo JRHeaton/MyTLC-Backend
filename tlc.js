@@ -46,8 +46,9 @@ function tlc_request(method, path, session_id, params, cb) {
 }
 
 function end_json(status, res, obj) {
-	var ret = JSON.stringify(obj);
+	var ret = JSON.stringify(obj, null, '\t');
 	res.writeHead(status, {
+		'Access-Control-Allow-Origin' : '*',
 		'Content-Length' : ret.length,
 		'Content-Type' : 'application/json'
 	});
@@ -63,6 +64,11 @@ exports.flush = function() {
 }
 
 function shifts_from_str_day(str, day) {
+	var splits = str.split('\n\n');
+	if(splits.length > 1) { 
+		return null;
+	}
+
 	var time = /(\d{2}:\d{2})\s+([AP]M) - (\d{2}:\d{2})\s+([AP]M)/.exec(str);
 	var info = /(\d+)-DEPT(\d+)/.exec(str);
 
@@ -234,6 +240,7 @@ exports.get_schedule = function (session_id, res) {
 
 				body = body.trim();
 
+				if(body == "OFF") return;
 				var shifts = shifts_from_str_day(body, day_);
 				_.each(shifts, function(_s) { current.push(_s) });
 
@@ -244,7 +251,7 @@ exports.get_schedule = function (session_id, res) {
 				var body = $(this).find('.calendarCellRegularPast.etmNoBorder').text();
 
 				body = body.trim();
-
+				if(body == "OFF") return;
 				var shifts = shifts_from_str_day(body, day_);
 				_.each(shifts, function(_s) { past.push(_s) });
 			});
